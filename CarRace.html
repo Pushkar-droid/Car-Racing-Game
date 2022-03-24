@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="CarRace.css">
+    <title>Document</title>  
+</head>
+
+<!-------------------------------------------------------------HTML.--------------------------------------------------------------->
+
+<body>
+    <div class="cargame">
+        <div class="score"></div>
+        <div class="label hide"></div>
+        <div class="mute hide">
+            <a href="javascript:void(0)"><img src="./images/mute1.jpg" height="30px" style="border-radius: 50px;"></a>
+        </div>
+        <div class="startscreen">
+            <p>Press here to start<br>
+            Arrow key to move<br>
+            If you hit another car you will lose.</p>
+        </div>
+        <div class="gamearea"></div>
+    </div>
+
+<!----------------------------------------------------------JAVASCRIPT--------------------------------------------------------------->
+
+<script>
+    const score = document.querySelector('.score');
+    const startscreen = document.querySelector('.startscreen');
+    const gamearea = document.querySelector('.gamearea');
+    const label = document.querySelector(".label");
+    const mute = document.querySelector(".mute");
+    let audio1 = new Audio("./music/musiccar.mp3")
+    let audio2 = new Audio("./music/sound.mp3")
+
+    let keys = {
+        ArrowUp : false,
+        ArrowDown : false,
+        ArrowLeft : false,
+        ArrowRight : false,
+    }
+
+    document.addEventListener('keydown', keydown);
+    document.addEventListener('keyup', keyup);
+
+    startscreen.addEventListener("click", start);
+
+    let player = { speed : 6, score : 0, id : 0, flag : 1,};
+
+    function keydown(e) {
+        e.preventDefault();
+        keys[e.key] = true;
+    }
+    function keyup(e) {
+        e.preventDefault();
+        keys[e.key] = false;
+    }
+
+    function mutt(){
+        player.flag = 0;
+    }
+    function collide(a,b){
+        aRect = a.getBoundingClientRect();
+        bRect = b.getBoundingClientRect();
+        
+
+        return !((aRect.bottom < bRect.top) || (aRect.top > bRect.bottom) || (aRect.right < bRect.left) || (aRect.left > bRect.right))
+    }
+
+    function movelines(){
+        let lines = document.querySelectorAll(".lines");
+        lines.forEach(function(item){
+            if(item.y >= 700){
+                item.y -= 750;
+            }
+            item.y += player.speed + 3;
+            item.style.top = item.y + "px";
+        })
+    }
+    function moveenemy(car){
+        let enemy = document.querySelectorAll(".enemy");
+        enemy.forEach(function(item){
+            if(collide(car,item)){
+                player.start = false
+                startscreen.classList.remove('hide')
+                audio2.play();
+                audio1.pause();
+                player.id = 0;
+            }
+            if(item.y >= 750){
+                item.y = -300;
+                item.style.left = Math.floor(Math.random()*350) + "px";
+            }
+            item.y += player.speed;
+            item.style.top = item.y + "px";
+        })
+    }
+
+    function gamplay() {
+        let car = document.querySelector(".car");
+        mute.classList.remove('hide');
+        mute.addEventListener("click", mutt);
+        if(player.flag == 1){
+            player.id = 1;
+        }
+        else{
+            player.id = 0;
+        }
+        if(player.score < 500){
+            player.speed = 6;
+            label.innerHTML = "Level 1"
+            label.classList.remove('hide');
+        }
+        else if(player.score >= 500 & player.score <1000){
+            player.speed = 9;
+            label.innerHTML = "Level 2"
+
+        }
+        else if(player.score >= 1000 & player.score <2000){
+            player.speed = 12;
+            label.innerHTML = "Level 3"
+
+        }
+        else {
+            player.speed = 15;
+            label.innerHTML = "level 4"
+        }
+        if(player.start){
+            if(keys.ArrowUp & player.y > 100){ player.y -= player.speed }
+            if(keys.ArrowDown & player.y < 530){ player.y += player.speed }
+            if(keys.ArrowLeft & player.x > 0){ player.x -= player.speed }
+            if(keys.ArrowRight & player.x < 362){ player.x += player.speed }
+
+            movelines();
+            moveenemy(car);
+            if(player.id == 1){ audio1.play();}
+            else { audio1.pause();}
+
+            car.style.top = player.y + "px";
+            car.style.left = player.x + "px";
+
+            window.requestAnimationFrame(gamplay);
+            player.score++
+            score.innerHTML = "Score: " + player.score; 
+        }
+
+    }
+
+   
+
+    function start() {
+        startscreen.classList.add("hide");
+        gamearea.innerHTML = ""
+
+        player.start = true;
+        player.score = 0;
+        window.requestAnimationFrame(gamplay);
+
+        for (x = 0; x < 5; x++) {
+            let roadlines = document.createElement('div');
+            roadlines.setAttribute('class','lines');
+            roadlines.y = (x*150);
+            roadlines.style.top = roadlines.y + "px";
+            gamearea.appendChild(roadlines)            
+        }
+
+        let car = document.createElement('div')
+        car.setAttribute('class','car');
+        gamearea.appendChild(car);
+
+        player.x = car.offsetLeft;
+        player.y = car.offsetTop;
+        
+        for (x = 0; x < 3; x++) {
+            let enemycar = document.createElement('div');
+            enemycar.setAttribute('class','enemy');
+            enemycar.y = ((x+1)*350) * -1;
+            enemycar.style.top = enemycar.y + "px";
+            enemycar.style.left = Math.floor(Math.random()*350) + "px";
+            enemycar.style.backgroundColor = "blue";
+            gamearea.appendChild(enemycar)            
+        }
+    }
+</script>
+
+</body>
+</html>
